@@ -13,19 +13,19 @@ sal_max = 'salary_max'
 
 
 def read_csv():
-    return pd.read_csv('csv/Hopkinton FY22 Market Data Report 11 17 2021.csv',
+    return pd.read_csv('csv/Melrose FY22 Market Data Report using Current pay 12-11- 2021.csv',
                        dtype='float64',
                        converters={title: str})
 
 
 def remove_summary_columns(df):
     bad_columns = [
-        "Data Points",
-        "Average",
-        "Lo-Hi Range",
-        "Median",
+        "Comp Data Points",
+        "Comp Average",
+        "Comp Lo-Hi Range",
+        "Comp Median",
         "75th Percent of Market",
-        "Higher/Lower than Avg."
+        "% Melrose Higher Lower than 75th Percentile"
     ]
     for c in bad_columns:
         df = df.drop(c, axis=1)
@@ -76,7 +76,7 @@ def combine_high_low(df):
         client_color = '#AAA'
         default_color = '#FFF'
 
-        if group[town].iloc[0] == 'Hopkinton':
+        if group[town].iloc[0] == 'Melrose Current FY22':
             color = client_color
         else:
             color = default_color
@@ -130,7 +130,7 @@ def graph(df):
         fig.update_layout(title=name, template="simple_white")
         fig.show()
         #fig.write_image("images/"+name+".svg")
-        #fig.write_html("html/"+name+".html")
+        fig.write_html("html/"+name+".html")
         fig.write_image("pdf/"+name+".pdf")
         
 
