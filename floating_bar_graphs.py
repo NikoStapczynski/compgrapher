@@ -7,21 +7,20 @@ from pathlib import Path
 import argparse
 import datetime
 
-title = 'POSITION TITLE'
 salary = 'salary'
 location = 'location'
 sal_min = 'salary_min'
 sal_max = 'salary_max'
+title = 'POSITION TITLE'
 
 def read_data(file_path, ext):
+    converters = {title: str} if title else {}
     if ext == '.csv':
-        return pd.read_csv(file_path,
-                           dtype='float64',
-                           converters={title: str})
+        return pd.read_csv(file_path, converters=converters)
     elif ext in ['.xls', '.xlsx']:
-        return pd.read_excel(file_path, dtype='float64', converters={title: str})
+        return pd.read_excel(file_path, converters=converters)
     elif ext == '.ods':
-        return pd.read_excel(file_path, engine='odf', dtype='float64', converters={title: str})
+        return pd.read_excel(file_path, engine='odf', converters=converters)
     else:
         raise ValueError(f"Unsupported file format: {ext}")
 
@@ -33,10 +32,10 @@ def remove_summary_columns(df):
         "Comp Lo-Hi Range",
         "Comp Median",
         "75th Percent of Market",
-        "% Client Higher Lower than 75th Percentile"
+        "% Melrose Higher Lower than 75th Percentile"
     ]
     for c in bad_columns:
-        df = df.drop(c, axis=1)
+        df = df.drop(c, axis=1, errors='ignore')
 
     return df
 
@@ -62,15 +61,21 @@ def normalize(df):
 
 
 def make_city_column(df):
-    return df.melt(
+    df = df.melt(
         id_vars=[title],
         value_vars=list(df.columns[1:]),
         value_name=salary,
         var_name=location
     ).dropna()
+    # Convert salary to numeric
+    df[salary] = pd.to_numeric(df[salary].astype(str).str.extract(r'(\d+\.?\d*)', expand=False), errors='coerce')
+    df = df.dropna(subset=[salary])
+    # Filter out empty titles
+    df = df[df[title].str.len() > 0]
+    return df
 
 
-def combine_high_low(df, client_location):
+def combine_high_low(df, location_name):
     groups = df.groupby([location, title])
 
     def helper(group):
@@ -84,7 +89,7 @@ def combine_high_low(df, client_location):
         client_color = '#AAA'
         default_color = '#FFF'
 
-        if group[location].iloc[0] == client_location:
+        if location_name in group[location].iloc[0]:
             color = client_color
         else:
             color = default_color
@@ -106,6 +111,8 @@ def combine_high_low(df, client_location):
 def graph(df, output):
 
     for name, group in df.groupby(title):
+        # Sanitize name for filename by replacing slashes with underscores
+        safe_name = name.replace('/', '_')
 
         group.sort_values(inplace=True, by=sal_max, ascending=True)
         fig = go.Figure([go.Bar(
@@ -126,7 +133,7 @@ def graph(df, output):
         fig.update_yaxes(showgrid=True, gridcolor="#AAA", title_text="Pay Range (Hourly)")
         fig.update_xaxes(title_text="Location")
         fig.update_layout(title=name, template="simple_white")
-        fig.show()
+        # fig.show()  # Commented out to prevent opening browser
         output_configs = {
             'html': ('output/html', lambda fig, path: fig.write_html(path)),
             'pdf': ('output/pdf', lambda fig, path: fig.write_image(path)),
@@ -141,11 +148,12 @@ def graph(df, output):
             if fmt in output_configs:
                 dir_path, write_func = output_configs[fmt]
                 os.makedirs(dir_path, exist_ok=True)
-                write_func(fig, f"{dir_path}/{name}.{fmt}")
+                write_func(fig, f"{dir_path}/{safe_name}.{fmt}")
         
 
 
 def main():
+    global title
     parser = argparse.ArgumentParser(description='Generate floating bar graphs for market data.')
     parser.add_argument('--location_name', type=str, default='SampleLocation', help='Name of the location for graphs')
     parser.add_argument('--fy_year', type=str, default=f'FY{datetime.datetime.now().year % 100:02d}', help='Fiscal year')
@@ -165,14 +173,48 @@ def main():
         raise ValueError(f"Unsupported file extension: {ext}")
 
     file_path = f'input/{subdir}/{args.data_file}'
+
+    # Read columns to find title and possibly client
+    if ext == '.csv':
+        columns = pd.read_csv(file_path, nrows=0).columns.tolist()
+    elif ext in ['.xls', '.xlsx']:
+        columns = pd.read_excel(file_path, nrows=0).columns.tolist()
+    elif ext == '.ods':
+        columns = pd.read_excel(file_path, engine='odf', nrows=0).columns.tolist()
+
+    # Find the title column (contains 'POSITION TITLE')
+    title = None
+    title_col_index = None
+    for i, col in enumerate(columns):
+        if 'POSITION TITLE' in col.upper():
+            title = col
+            title_col_index = i
+            break
+
+    if title is None:
+        raise ValueError("Could not find POSITION TITLE column in the file")
+
+    # If location_name is default, set from CSV
+    if args.location_name == 'SampleLocation':
+        if title_col_index is not None and title_col_index + 1 < len(columns):
+            client_col = columns[title_col_index + 1]
+            # Parse the client name: take part before 'Current' if present
+            if 'Current' in client_col:
+                args.location_name = client_col.split('Current')[0].strip()
+            else:
+                args.location_name = client_col
+
     client_location = f'{args.location_name} Current {args.fy_year}'
 
     df = read_data(file_path, ext)
     df = remove_summary_columns(df)
+    # Ensure even number of rows
+    if len(df) % 2 == 1:
+        df = df.iloc[:-1]
     df = combine_lines(df)
     df = normalize(df)
     df = make_city_column(df)
-    df = combine_high_low(df, client_location)
+    df = combine_high_low(df, args.location_name)
     graph(df, args.output)
 
 
