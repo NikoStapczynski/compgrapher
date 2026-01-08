@@ -155,7 +155,7 @@ def graph(df, output):
 def main():
     global title
     parser = argparse.ArgumentParser(description='Generate floating bar graphs for market data.')
-    parser.add_argument('--location_name', type=str, default='SampleLocation', help='Name of the location for graphs')
+    parser.add_argument('--client', type=str, help='Name of the client to be highlighted. Defaults to the first employer found in the data set')
     parser.add_argument('--fy_year', type=str, default=f'FY{datetime.datetime.now().year % 100:02d}', help='Fiscal year')
     parser.add_argument('--data_file', type=str, default='sample_market_data.csv', help='Data file name (supports .csv, .xls, .xlsx, .ods) in input/ subdirectories')
     parser.add_argument('--output', nargs='+', default=['html'], choices=['html', 'pdf', 'png', 'svg', 'jpg', 'jpeg', 'webp', 'eps'], help='Output formats: html, pdf, png, svg, jpg, jpeg, webp, eps')
@@ -194,17 +194,19 @@ def main():
     if title is None:
         raise ValueError("Could not find POSITION TITLE column in the file")
 
-    # If location_name is default, set from CSV
-    if args.location_name == 'SampleLocation':
+    # If client not provided, set from CSV
+    if args.client is None:
         if title_col_index is not None and title_col_index + 1 < len(columns):
             client_col = columns[title_col_index + 1]
             # Parse the client name: take part before 'Current' if present
             if 'Current' in client_col:
-                args.location_name = client_col.split('Current')[0].strip()
+                args.client = client_col.split('Current')[0].strip()
             else:
-                args.location_name = client_col
+                args.client = client_col
+        else:
+            raise ValueError("Client name not provided and could not determine from file")
 
-    client_location = f'{args.location_name} Current {args.fy_year}'
+    client_location = f'{args.client} Current {args.fy_year}'
 
     df = read_data(file_path, ext)
     df = remove_summary_columns(df)
@@ -214,7 +216,7 @@ def main():
     df = combine_lines(df)
     df = normalize(df)
     df = make_city_column(df)
-    df = combine_high_low(df, args.location_name)
+    df = combine_high_low(df, args.client)
     graph(df, args.output)
 
 
