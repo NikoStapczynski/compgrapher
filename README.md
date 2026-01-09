@@ -15,9 +15,9 @@ This repository provides a generic template for generating floating bar graphs f
    pip install -r requirements.txt
    ```
 
-3. Place your market data file in the appropriate `input/` subdirectory: `.csv` files in `input/csv/`, `.xls`/`.xlsx` files in `input/xls/`, `.ods` files in `input/ods/`. The file should have columns for position titles and salary ranges for different locations, similar to the sample data.
+3. Place your market data file anywhere in your filesystem. The file should have columns for position titles and salary ranges for different locations, similar to the sample data. Supported formats: .csv, .xls, .xlsx, .ods.
 
-4. Update the data file to match your client's information. Ensure the column for your client is named `{client} Current {fy_year}` (e.g., "Melrose Current FY22").
+4. Update the data file to match your client's information. Ensure the column for your client is named `{client} Current {fy}` (e.g., "Melrose Current FY22").
 
 5. If needed, adjust the `bad_columns` list in `floating_bar_graphs.py` to remove any summary columns specific to your data.
 
@@ -26,13 +26,13 @@ This repository provides a generic template for generating floating bar graphs f
 Run the script with your client parameters:
 
 ```bash
-python floating_bar_graphs.py --client "YourClient" --fy_year "FY23" --data_file "your_data.csv" --output html pdf png
+python floating_bar_graphs.py --client "YourClient" --fy "FY23" --input "your_data.csv" --output html pdf png
 ```
 
-- `--client`: Name of the client to be highlighted. Defaults to the first employer found in the data set
-- `--fy_year`: Fiscal year (default: current fiscal year, e.g., FY26)
-- `--data_file`: Data file name (supports .csv, .xls, .xlsx, .ods) in input/ subdirectories (default: sample_market_data.csv)
-- `--output`: Output formats (default: html). Choices: html, pdf, png, svg, jpg, jpeg, webp, eps
+- `--client Employer` (optional): Name of the employer to be highlighted. Defaults to the first employer found in the input file
+- `--fy` (optional): Fiscal year (default: current fiscal year, e.g., FY26)
+- `--input path/to/file` (optional): Path to data file (supports .csv, .xls, .xlsx, .ods) (default: input/csv/sample_market_data.csv)
+- `--output file extension(s)` (optional): Output format(s) (default: html). Choices: html, pdf, png, svg, jpg, jpeg, webp, eps
 
 The script will generate graphs in the specified formats in the `output/` subdirectories (e.g., `output/html/`, `output/pdf/`, etc.).
 
@@ -57,6 +57,6 @@ The script automatically removes summary columns (e.g., "Comp Data Points", "Com
 ## Adapting for a New Client
 
 1. Replace the sample data with your client's data.
-2. Rename columns to match `{client} Current {fy_year}`.
+2. Rename columns to match `{client} Current {fy}`.
 3. Update any hardcoded summary column names if they differ.
 4. Run the script with your parameters.

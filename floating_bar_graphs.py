@@ -155,24 +155,17 @@ def graph(df, output):
 def main():
     global title
     parser = argparse.ArgumentParser(description='Generate floating bar graphs for market data.')
-    parser.add_argument('--client', type=str, help='Name of the client to be highlighted. Defaults to the first employer found in the data set')
-    parser.add_argument('--fy_year', type=str, default=f'FY{datetime.datetime.now().year % 100:02d}', help='Fiscal year')
-    parser.add_argument('--data_file', type=str, default='sample_market_data.csv', help='Data file name (supports .csv, .xls, .xlsx, .ods) in input/ subdirectories')
-    parser.add_argument('--output', nargs='+', default=['html'], choices=['html', 'pdf', 'png', 'svg', 'jpg', 'jpeg', 'webp', 'eps'], help='Output formats: html, pdf, png, svg, jpg, jpeg, webp, eps')
+    parser.add_argument('--client', type=str, help='Name of the client to be highlighted. Defaults to the first employer found in the data set', metavar='Employer')
+    parser.add_argument('--fy', type=str, default=f'FY{datetime.datetime.now().year % 100:02d}', help='Fiscal year')
+    parser.add_argument('--input', type=str, default='input/csv/sample_market_data.csv', help='Path to data file (supports .csv, .xls, .xlsx, .ods)', metavar='path/to/file')
+    parser.add_argument('--output', nargs='+', default=['html'], choices=['html', 'pdf', 'png', 'svg', 'jpg', 'jpeg', 'webp', 'eps'], help='Output formats: html, pdf, png, svg, jpg, jpeg, webp, eps', metavar='file extension')
 
     args = parser.parse_args()
 
-    ext = os.path.splitext(args.data_file)[1].lower()
-    if ext == '.csv':
-        subdir = 'csv'
-    elif ext in ['.xls', '.xlsx']:
-        subdir = 'xls'
-    elif ext == '.ods':
-        subdir = 'ods'
-    else:
+    file_path = args.input
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext not in ['.csv', '.xls', '.xlsx', '.ods']:
         raise ValueError(f"Unsupported file extension: {ext}")
-
-    file_path = f'input/{subdir}/{args.data_file}'
 
     # Read columns to find title and possibly client
     if ext == '.csv':
@@ -206,7 +199,7 @@ def main():
         else:
             raise ValueError("Client name not provided and could not determine from file")
 
-    client_location = f'{args.client} Current {args.fy_year}'
+    client_location = f'{args.client} Current {args.fy}'
 
     df = read_data(file_path, ext)
     df = remove_summary_columns(df)
