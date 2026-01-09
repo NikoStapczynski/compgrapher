@@ -27,12 +27,12 @@ Compgrapher (Compensation Grapher) is a tool for generating floating bar graphs 
 
    Example structure (from `input/csv/sample_table.csv`):
 
-   | Row | POSITION TITLE | Employer A | Employer B |
-   |-----|----------------|------------|------------|
-   | 1   | Job Title 1    | 100        | 95         |
-   | 2   |                | 80         | 75         |
-   | 3   | Job Title 2    | 120        | 110        |
-   | 4   |                | 90         | 85         |
+   | Row | POSITION TITLE | Employer A | Employer B | Employer C | Employer D | Employer E |
+   |-----|----------------|------------|------------|------------|------------|------------|
+   | 1   | Job Title 1    | 100        | 95         | 105        |            |            |
+   | 2   |                | 80         | 75         |            | 90         |            |
+   | 3   | Job Title 2    | 120        | 110        | 115        | 125        | 130        |
+   | 4   |                | 90         | 85         | 95         |            | 120        |
 
    - Row 1 & 2: High and low salaries for Job Title 1
    - Row 3 & 4: High and low salaries for Job Title 2
