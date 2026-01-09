@@ -203,11 +203,20 @@ def main():
 
     df = read_data(file_path, ext)
     df = remove_summary_columns(df)
-    # Ensure even number of rows
-    if len(df) % 2 == 1:
-        df = df.iloc[:-1]
-    df = combine_lines(df)
-    df = normalize(df)
+
+    # Check if job titles are on every line (no empty titles)
+    titles_present = df[title].notna() & (df[title].str.strip() != '')
+    if titles_present.all():
+        # Titles on every line: no pairing needed
+        pass  # Proceed directly to make_city_column
+    else:
+        # Titles on every other line: use pairing logic
+        # Ensure even number of rows
+        if len(df) % 2 == 1:
+            df = df.iloc[:-1]
+        df = combine_lines(df)
+        df = normalize(df)
+
     df = make_city_column(df)
     df = combine_high_low(df, args.client)
     graph(df, args.output)
