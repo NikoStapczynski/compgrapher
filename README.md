@@ -25,17 +25,17 @@ Compgrapher (Compensation Grapher) is a tool for generating floating bar graphs 
 
    The data file (CSV, XLS, XLSX, or ODS) should have a 'POSITION TITLE' column and columns for each employer with salary data. The data alternates between high and low salary ranges on consecutive rows for each position.
 
-   Example structure (from `input/csv/sample_table.csv`):
+   Example structure (from `input/csv/example_table.csv`):
 
    | Row | POSITION TITLE | Employer A | Employer B | Employer C | Employer D | Employer E |
    |-----|----------------|------------|------------|------------|------------|------------|
-   | 1   | Software Engineer | 100        | 95         | 105        |            |            |
+   | 1   | Example Software Engineer | 100        | 95         | 105        |            |            |
    | 2   |                | 80         | 75         |            | 90         |            |
-   | 3   | Data Scientist | 120        | 110        | 115        | 125        | 130        |
+   | 3   | Example Data Scientist | 120        | 110        | 115        | 125        | 130        |
    | 4   |                | 90         | 85         | 95         |            | 120        |
 
-   - Row 1 & 2: High and low salaries for Software Engineer
-   - Row 3 & 4: High and low salaries for Data Scientist
+   - Row 1 & 2: High and low salaries for Example Software Engineer
+   - Row 3 & 4: High and low salaries for Example Data Scientist
 
    The script automatically removes summary columns (e.g., "Comp Data Points", "Comp Average"). Adjust the `bad_columns` list in the script if your data has different summary columns.
 
@@ -43,22 +43,22 @@ Compgrapher (Compensation Grapher) is a tool for generating floating bar graphs 
 
    Run the script with the sample data to generate PNG graphs:
    ```bash
-   python3 floating_bar_graphs.py --input input/csv/sample_table.csv --output png
+   python3 floating_bar_graphs.py --input input/csv/example_table.csv --output png
    ```
 
    This will create PNG files in `output/png/` showing floating bar graphs for each position.
 
    **Sample Output:**
 
-   <img src="output/png/Software%20Engineer.png" width="50%" alt="Software Engineer">
+   <img src="output/png/Example%20Software%20Engineer.png" width="50%" alt="Example Software Engineer">
 
-   *Software Engineer: Floating bar graph comparing compensation between Employer A and Employer B*
+   *Example Software Engineer: Floating bar graph comparing compensation between Employer A and Employer B*
 
    <br>
 
-   <img src="output/png/Data%20Scientist.png" width="50%" alt="Data Scientist">
+   <img src="output/png/Example%20Data%20Scientist.png" width="50%" alt="Example Data Scientist">
 
-   *Data Scientist: Floating bar graph comparing compensation between Employer A and Employer B*
+   *Example Data Scientist: Floating bar graph comparing compensation between Employer A and Employer B*
 
 ## Usage
 
@@ -69,7 +69,7 @@ python floating_bar_graphs.py --client "YourClient" --input "your_data.csv" --ou
 ```
 
 - `--client Employer` (optional): Name of the employer to be highlighted. Defaults to the first employer found in the input file
-- `--input path/to/file` (optional): Path to data file (supports .csv, .xls, .xlsx, .ods) (default: input/csv/sample_table.csv)
+- `--input path/to/file` (optional): Path to data file (supports .csv, .xls, .xlsx, .ods) (default: input/csv/example_table.csv)
 - `--output file extension(s)` (optional): Output format(s) (default: html). Choices: html, pdf, png, svg, jpg, jpeg, webp, eps
 
 The script will generate graphs in the specified formats in the `output/` subdirectories (e.g., `output/html/`, `output/pdf/`, etc.).
