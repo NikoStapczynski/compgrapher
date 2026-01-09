@@ -29,13 +29,13 @@ Compgrapher (Compensation Grapher) is a tool for generating floating bar graphs 
 
    | Row | POSITION TITLE | Employer A | Employer B | Employer C | Employer D | Employer E |
    |-----|----------------|------------|------------|------------|------------|------------|
-   | 1   | Job Title 1    | 100        | 95         | 105        |            |            |
+   | 1   | Software Engineer | 100        | 95         | 105        |            |            |
    | 2   |                | 80         | 75         |            | 90         |            |
-   | 3   | Job Title 2    | 120        | 110        | 115        | 125        | 130        |
+   | 3   | Data Scientist | 120        | 110        | 115        | 125        | 130        |
    | 4   |                | 90         | 85         | 95         |            | 120        |
 
-   - Row 1 & 2: High and low salaries for Job Title 1
-   - Row 3 & 4: High and low salaries for Job Title 2
+   - Row 1 & 2: High and low salaries for Software Engineer
+   - Row 3 & 4: High and low salaries for Data Scientist
 
    The script automatically removes summary columns (e.g., "Comp Data Points", "Comp Average"). Adjust the `bad_columns` list in the script if your data has different summary columns.
 
@@ -50,13 +50,15 @@ Compgrapher (Compensation Grapher) is a tool for generating floating bar graphs 
 
    **Sample Output:**
 
-   <img src="output/png/Job%20Title%201.png" width="50%" alt="Job Title 1">
+   <img src="output/png/Software%20Engineer.png" width="50%" alt="Software Engineer">
 
-   *Job Title 1: Floating bar graph comparing salaries between Employer A and Employer B*
+   *Software Engineer: Floating bar graph comparing compensation between Employer A and Employer B*
 
-   <img src="output/png/Job%20Title%202.png" width="50%" alt="Job Title 2">
+   <br>
 
-   *Job Title 2: Floating bar graph comparing salaries between Employer A and Employer B*
+   <img src="output/png/Data%20Scientist.png" width="50%" alt="Data Scientist">
+
+   *Data Scientist: Floating bar graph comparing compensation between Employer A and Employer B*
 
 ## Usage
 
