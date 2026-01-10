@@ -43,7 +43,7 @@ Compgrapher (Compensation Grapher) is a tool for generating floating bar graphs 
 
    Run the script with the sample data to generate SVG graphs:
    ```bash
-   python3 floating_bar_graphs.py --input input/csv/example_table.csv --output svg
+   python3 main.py --input input/csv/example_table.csv --output svg
    ```
 
    This will create SVG files in `output/svg/` showing floating bar graphs for each position.
@@ -65,7 +65,7 @@ Compgrapher (Compensation Grapher) is a tool for generating floating bar graphs 
 Run the script with your client parameters:
 
 ```bash
-python floating_bar_graphs.py --client "YourClient" --input "your_data.csv" --output html pdf png
+python main.py --client "YourClient" --input "your_data.csv" --output html pdf png
 ```
 
 - `--client Employer` (optional): Name of the employer to be highlighted. Defaults to the first employer found in the input file
