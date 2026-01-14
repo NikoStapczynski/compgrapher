@@ -1,0 +1,111 @@
+# Compgrapher Configuration File
+# ================================
+# This file contains default settings for the compgrapher tool.
+# Command-line arguments will override these settings.
+# 
+# Usage: compgrapher --config config.yaml
+
+# Default settings for command-line options
+defaults:
+  # Input file path (relative to working directory)
+  # Supports: .csv, .xls, .xlsx, .ods
+  input: input/csv/example_table.csv
+  
+  # Output formats (list)
+  # Available: html, pdf, png, svg, jpg, jpeg, webp, eps
+  output:
+    - png
+    - html
+  
+  # Client name to highlight in graphs
+  # If not set, uses the first employer found in data
+  # client: "Your Company Name"
+  
+  # Run data validation checks
+  validate: true
+  
+  # Logging verbosity
+  verbose: false
+  quiet: false
+  
+  # Generate summary statistics report
+  summary: false
+
+# Graph appearance settings
+graph:
+  # Colors (hex values)
+  colors:
+    client: '#AAA'       # Color for highlighted client bars
+    default: '#FFF'      # Color for other employer bars
+    edge: 'black'        # Bar border color
+    grid: '#AAA'         # Grid line color
+  
+  # Figure dimensions
+  figure:
+    width: 10.0          # Width in inches
+    height: 6.0          # Height in inches
+    dpi: 100             # Resolution for raster formats
+  
+  # Labels
+  labels:
+    xlabel: 'Location'
+    ylabel: 'Pay Range (Hourly)'
+  
+  # Display options
+  display:
+    show_grid: true      # Show grid lines
+    show_labels: false   # Show salary values on bars
+    bar_width: 0.8       # Width of bars (0.0 to 1.0)
+    rotate_xlabels: 45   # X-axis label rotation (degrees)
+
+# Output settings
+output:
+  # Base directory for all output files
+  directory: 'output'
+  
+  # Subdirectory structure (created automatically)
+  # output/
+  #   ├── html/
+  #   ├── pdf/
+  #   ├── png/
+  #   ├── svg/
+  #   └── ...
+
+# Validation settings
+validation:
+  # Check if salary values are within expected ranges
+  check_ranges: true
+  
+  # Warn if low salary exceeds high salary
+  check_low_high: true
+  
+  # Warn about negative salary values
+  check_negative: true
+  
+  # Warn about unusually large salary ranges (percentage)
+  max_range_percent: 100
+
+# Logging settings
+logging:
+  # Log file path (optional, leave empty for no file logging)
+  # file: 'compgrapher.log'
+  
+  # Log format
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  date_format: '%Y-%m-%d %H:%M:%S'
+
+# HTML report settings
+html_report:
+  # Include embedded charts (requires png output as well)
+  embed_charts: true
+  
+  # Show position statistics
+  show_statistics: true
+  
+  # Color theme
+  theme:
+    primary: '#667eea'
+    secondary: '#764ba2'
+    accent: '#3498db'
+    background: '#f5f5f5'
+    text: '#333333'

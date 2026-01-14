@@ -3,6 +3,7 @@ import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
+import logging
 
 salary = 'salary'
 location = 'location'
@@ -139,13 +140,239 @@ def graph(df, output):
         plt.close(fig)
 
 
+def graph_with_html(df, output_formats, client_name, input_file):
+    """Generate graphs with optional HTML output"""
+    from datetime import datetime
+
+    # Generate image formats first
+    image_formats = [fmt for fmt in output_formats if fmt != 'html']
+    if image_formats:
+        graph(df, image_formats)
+
+    # Generate HTML if requested
+    if 'html' in output_formats:
+        generate_html_report(df, client_name, input_file)
+
+
+def generate_html_report(df, client_name, input_file):
+    """Generate HTML report with embedded charts"""
+    from datetime import datetime
+
+    # Group data by position for HTML generation
+    position_summaries = []
+
+    for position_name, group in df.groupby(title):
+        safe_name = position_name.replace('/', '_')
+
+        # Sort by salary range
+        group = group.sort_values(by=sal_max, ascending=True)
+
+        # Create position summary
+        employers_data = []
+        for _, row in group.iterrows():
+            employers_data.append({
+                'employer': row[location],
+                'min_salary': row[sal_min],
+                'max_salary': row[sal_max],
+                'is_client': client_name in row[location]
+            })
+
+        position_summaries.append({
+            'name': position_name,
+            'safe_name': safe_name,
+            'employers': employers_data,
+            'chart_file': f'../png/{safe_name}.png'
+        })
+
+    # Generate HTML
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    html_content = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compensation Analysis Report - {client_name}</title>
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }}
+        .position-card {{
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }}
+        .position-title {{
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }}
+        .chart-container {{
+            text-align: center;
+            margin: 20px 0;
+        }}
+        .salary-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }}
+        .salary-table th, .salary-table td {{
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }}
+        .salary-table th {{
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }}
+        .client-row {{
+            background-color: #e8f4fd;
+            font-weight: bold;
+        }}
+        .salary-range {{
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }}
+        .summary {{
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }}
+        .stats {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }}
+        .stat-box {{
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }}
+        .stat-value {{
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #3498db;
+        }}
+        .stat-label {{
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Compensation Analysis Report</h1>
+        <h2>Client: {client_name}</h2>
+        <p>Generated on {timestamp}</p>
+        <p>Data source: {os.path.basename(input_file)}</p>
+    </div>
+
+    <div class="summary">
+        <h2>Report Summary</h2>
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value">{len(position_summaries)}</div>
+                <div class="stat-label">Positions Analyzed</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{len(set(emp['employer'] for pos in position_summaries for emp in pos['employers']))}</div>
+                <div class="stat-label">Employers Compared</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">${df[sal_min].min():,.0f} - ${df[sal_max].max():,.0f}</div>
+                <div class="stat-label">Salary Range</div>
+            </div>
+        </div>
+    </div>
+
+    <h2>Position Details</h2>
+'''
+
+    for position in position_summaries:
+        html_content += f'''
+    <div class="position-card">
+        <div class="position-title">{position['name']}</div>
+
+        <div class="chart-container">
+            <img src="{position['chart_file']}" alt="Salary comparison for {position['name']}" style="max-width: 100%; height: auto;">
+        </div>
+
+        <table class="salary-table">
+            <thead>
+                <tr>
+                    <th>Employer</th>
+                    <th>Minimum Salary</th>
+                    <th>Maximum Salary</th>
+                    <th>Salary Range</th>
+                </tr>
+            </thead>
+            <tbody>
+'''
+
+        for employer in position['employers']:
+            row_class = 'client-row' if employer['is_client'] else ''
+            html_content += f'''
+                <tr class="{row_class}">
+                    <td>{employer['employer']}</td>
+                    <td>${employer['min_salary']:,.0f}</td>
+                    <td>${employer['max_salary']:,.0f}</td>
+                    <td class="salary-range">${employer['min_salary']:,.0f} - ${employer['max_salary']:,.0f}</td>
+                </tr>
+'''
+
+        html_content += '''
+            </tbody>
+        </table>
+    </div>
+'''
+
+    html_content += '''
+</body>
+</html>
+'''
+
+    # Save HTML file
+    os.makedirs('output/html', exist_ok=True)
+    html_filename = f"compensation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    html_path = os.path.join('output/html', html_filename)
+
+    with open(html_path, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+
+    print(f"HTML report saved to: {html_path}")
+
+
 def main():
-    global title
+    # Set up logging
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger(__name__)
+
     parser = argparse.ArgumentParser(description='Generate floating bar graphs for compensation data.')
     parser.add_argument('--client', type=str, help='Name of the client to be highlighted. Defaults to the first employer found in the data set', metavar='Employer')
-
     parser.add_argument('--input', type=str, default='input/csv/example_table.csv', help='Path to data file (supports .csv, .xls, .xlsx, .ods)', metavar='path/to/file')
-    parser.add_argument('--output', nargs='+', default=['png'], choices=['pdf', 'png', 'svg', 'jpg', 'jpeg', 'webp', 'eps'], help='Output formats: pdf, png, svg, jpg, jpeg, webp, eps', metavar='file extension')
+    parser.add_argument('--output', nargs='+', default=['png'], choices=['html', 'pdf', 'png', 'svg', 'jpg', 'jpeg', 'webp', 'eps'], help='Output formats: html, pdf, png, svg, jpg, jpeg, webp, eps', metavar='file extension')
 
     args = parser.parse_args()
 
@@ -204,7 +431,7 @@ def main():
 
     df = make_city_column(df)
     df = combine_high_low(df, args.client)
-    graph(df, args.output)
+    graph_with_html(df, args.output, args.client, args.input)
 
 
 if __name__ == "__main__":
