@@ -140,7 +140,7 @@ Examples:
   %(prog)s --input data.csv --client "Acme Corp" --validate
   %(prog)s --config config.yaml --verbose
 
-For more information, visit: https://github.com/NikoStapczynski/compgrapher
+For more information, visit: https://github.com/nstapc/compgrapher
         '''
     )
     

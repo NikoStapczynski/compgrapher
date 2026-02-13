@@ -1,18 +1,18 @@
 # Compgrapher
 
-[![CI](https://github.com/NikoStapczynski/compgrapher/actions/workflows/ci.yml/badge.svg)](https://github.com/NikoStapczynski/compgrapher/actions/workflows/ci.yml)
+[![CI](https://github.com/nstapc/compgrapher/actions/workflows/ci.yml/badge.svg)](https://github.com/nstapc/compgrapher/actions/workflows/ci.yml)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Compgrapher is a powerful tool that generates floating bar graphs from compensation market data to facilitate employer comparisons. Perfect for HR professionals, compensation analysts, and business leaders who need to visualize and compare salary data across multiple employers.
 
-## 📸 Example Output
+## Example Output
 
 <img src="output/svg/Example%20Software%20Engineer.svg" width="60%" alt="Example Software Engineer Compensation">
 
 <img src="output/svg/Example%20Data%20Scientist.svg" width="60%" alt="Example Data Scientist Compensation">
 
-## ✨ Features
+## Features
 
 - **Multiple Input Formats**: Supports CSV, XLS, XLSX, and ODS files
 - **Multiple Output Formats**: Generate HTML reports, PDF, PNG, SVG, JPG, WEBP, and EPS
@@ -22,13 +22,13 @@ Compgrapher is a powerful tool that generates floating bar graphs from compensat
 - **Statistics**: Calculate min, max, median, and mean compensation values
 - **Extensible**: Modular architecture for easy customization
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/NikoStapczynski/compgrapher.git
+git clone https://github.com/nstapc/compgrapher.git
 cd compgrapher
 
 # Set up virtual environment (recommended)
@@ -52,7 +52,7 @@ python main.py --input your_data.csv --output html png
 python main.py --client "Your Company" --input data.csv --output html pdf png
 ```
 
-## 📖 Documentation
+## Documentation
 
 ### Input Data Format
 
@@ -121,7 +121,7 @@ graph:
 
 Use with: `python main.py --config config.yaml`
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Install test dependencies
@@ -134,7 +134,7 @@ pytest
 pytest --cov=. --cov-report=html
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 compgrapher/
@@ -162,7 +162,7 @@ compgrapher/
     └── pdf/
 ```
 
-## 🔧 Development
+## Development
 
 ### Setting Up Development Environment
 
@@ -191,39 +191,3 @@ pytest -v
 # Run specific test file
 pytest tests/test_data_parser.py
 ```
-
-## 🤝 Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Quick Contribution Steps
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests (`pytest`)
-5. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
-
-## 📋 Roadmap
-
-- [ ] JSON input support
-- [ ] Percentile markers (25th, 50th, 75th)
-- [ ] Sort employers by median compensation
-- [ ] Direct API integration with compensation data providers
-- [ ] Batch processing with progress bars
-- [ ] Dark mode for HTML reports
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [pandas](https://pandas.pydata.org/) and [matplotlib](https://matplotlib.org/)
-- Inspired by the need for better compensation data visualization
-
----
-
-**Made with ❤️ by [NikoStapczynski](https://github.com/NikoStapczynski)**

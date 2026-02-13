@@ -89,7 +89,11 @@ class CompensationDataParser:
             logger.info(f"Removing columns: {columns_to_drop}")
             df = df.drop(columns=columns_to_drop)
         
-        # Remove rows where position title is NaN
+        # Forward-fill position titles to handle alternating row format
+        # where only the first row of each pair has a position title
+        df['POSITION TITLE'] = df['POSITION TITLE'].ffill()
+        
+        # Remove rows where position title is still NaN (e.g., header rows with no data)
         df = df.dropna(subset=['POSITION TITLE'])
         
         logger.info(f"Data cleaned: {len(df)} rows remaining")

@@ -10,10 +10,10 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.8"
 authors = [
-    {name = "NikoStapczynski", email = "niko@example.com"},
+    {name = "nstapc", email = "niko@example.com"},
 ]
 maintainers = [
-    {name = "NikoStapczynski", email = "niko@example.com"},
+    {name = "nstapc", email = "niko@example.com"},
 ]
 keywords = [
     "compensation",
@@ -72,11 +72,11 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/NikoStapczynski/compgrapher"
-Documentation = "https://github.com/NikoStapczynski/compgrapher#readme"
-Repository = "https://github.com/NikoStapczynski/compgrapher.git"
-Issues = "https://github.com/NikoStapczynski/compgrapher/issues"
-Changelog = "https://github.com/NikoStapczynski/compgrapher/releases"
+Homepage = "https://github.com/nstapc/compgrapher"
+Documentation = "https://github.com/nstapc/compgrapher#readme"
+Repository = "https://github.com/nstapc/compgrapher.git"
+Issues = "https://github.com/nstapc/compgrapher/issues"
+Changelog = "https://github.com/nstapc/compgrapher/releases"
 
 [project.scripts]
 compgrapher = "cli:main"
