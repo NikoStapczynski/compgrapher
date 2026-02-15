@@ -5,6 +5,33 @@ import matplotlib.pyplot as plt
 import argparse
 import logging
 
+
+class FriendlyArgumentParser(argparse.ArgumentParser):
+    """Custom ArgumentParser that prints helpful error messages"""
+    
+    def error(self, message):
+        print("\n" + "="*60)
+        print("ERROR: Invalid command usage")
+        print("="*60)
+        print(f"\n{message}\n")
+        print("USAGE:")
+        print("  python main.py [OPTIONS]\n")
+        print("REQUIRED:")
+        print("  --input FILE        Path to data file (.csv, .xls, .xlsx, .ods)")
+        print("                      Default: input/csv/example_table.csv\n")
+        print("OPTIONAL:")
+        print("  --client NAME       Name of client to highlight (auto-detected if not provided)")
+        print("  --output FORMATS    Output format(s): html, pdf, png, svg, jpg, jpeg, webp, eps")
+        print("                      Default: png")
+        print("  -h, --help          Show full help message\n")
+        print("EXAMPLES:")
+        print("  python main.py")
+        print("  python main.py --input data.csv")
+        print("  python main.py --input data.xlsx --client 'Company Name'")
+        print("  python main.py --input data.csv --output html png svg")
+        print("="*60 + "\n")
+        sys.exit(2)
+
 salary = 'salary'
 location = 'location'
 sal_min = 'salary_min'
@@ -364,12 +391,23 @@ def generate_html_report(df, client_name, input_file):
     print(f"HTML report saved to: {html_path}")
 
 
+def print_error(message, suggestion=None):
+    """Print a formatted error message with optional suggestion"""
+    print("\n" + "="*60)
+    print("ERROR")
+    print("="*60)
+    print(f"\n{message}")
+    if suggestion:
+        print(f"\nSuggestion: {suggestion}")
+    print("="*60 + "\n")
+
+
 def main():
     # Set up logging
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
 
-    parser = argparse.ArgumentParser(description='Generate floating bar graphs for compensation data.')
+    parser = FriendlyArgumentParser(description='Generate floating bar graphs for compensation data.')
     parser.add_argument('--client', type=str, help='Name of the client to be highlighted. Defaults to the first employer found in the data set', metavar='Employer')
     parser.add_argument('--input', type=str, default='input/csv/example_table.csv', help='Path to data file (supports .csv, .xls, .xlsx, .ods)', metavar='path/to/file')
     parser.add_argument('--output', nargs='+', default=['png'], choices=['html', 'pdf', 'png', 'svg', 'jpg', 'jpeg', 'webp', 'eps'], help='Output formats: html, pdf, png, svg, jpg, jpeg, webp, eps', metavar='file extension')
@@ -377,17 +415,37 @@ def main():
     args = parser.parse_args()
 
     file_path = args.input
+    
+    # Check if file exists
+    if not os.path.exists(file_path):
+        print_error(
+            f"File not found: {file_path}",
+            "Check that the file path is correct. Example: --input input/csv/mydata.csv"
+        )
+        sys.exit(1)
+    
     ext = os.path.splitext(file_path)[1].lower()
     if ext not in ['.csv', '.xls', '.xlsx', '.ods']:
-        raise ValueError(f"Unsupported file extension: {ext}")
+        print_error(
+            f"Unsupported file format: {ext}",
+            "Supported formats: .csv, .xls, .xlsx, .ods"
+        )
+        sys.exit(1)
 
     # Read columns to find title and possibly client
-    if ext == '.csv':
-        columns = pd.read_csv(file_path, nrows=0).columns.tolist()
-    elif ext in ['.xls', '.xlsx']:
-        columns = pd.read_excel(file_path, nrows=0).columns.tolist()
-    elif ext == '.ods':
-        columns = pd.read_excel(file_path, engine='odf', nrows=0).columns.tolist()
+    try:
+        if ext == '.csv':
+            columns = pd.read_csv(file_path, nrows=0).columns.tolist()
+        elif ext in ['.xls', '.xlsx']:
+            columns = pd.read_excel(file_path, nrows=0).columns.tolist()
+        elif ext == '.ods':
+            columns = pd.read_excel(file_path, engine='odf', nrows=0).columns.tolist()
+    except Exception as e:
+        print_error(
+            f"Could not read file: {e}",
+            "Make sure the file is not corrupted and has the correct format"
+        )
+        sys.exit(1)
 
     # Find the title column (contains 'POSITION TITLE')
     title = None
@@ -399,7 +457,11 @@ def main():
             break
 
     if title is None:
-        raise ValueError("Could not find POSITION TITLE column in the file")
+        print_error(
+            "Could not find 'POSITION TITLE' column in the file",
+            "Make sure your data has a column with 'POSITION TITLE' in its header"
+        )
+        sys.exit(1)
 
     # If client not provided, set from CSV
     if args.client is None:
@@ -411,9 +473,21 @@ def main():
             else:
                 args.client = client_col
         else:
-            raise ValueError("Client name not provided and could not determine from file")
+            print_error(
+                "Client name not provided and could not determine from file",
+                "Use --client 'Client Name' to specify the client to highlight"
+            )
+            sys.exit(1)
 
-    df = read_data(file_path, ext)
+    try:
+        df = read_data(file_path, ext)
+    except Exception as e:
+        print_error(
+            f"Error reading data file: {e}",
+            "Make sure the file format matches the extension"
+        )
+        sys.exit(1)
+        
     df = remove_summary_columns(df)
 
     # Check if job titles are on every line (no empty titles)
@@ -432,6 +506,17 @@ def main():
     df = make_city_column(df)
     df = combine_high_low(df, args.client)
     graph_with_html(df, args.output, args.client, args.input)
+    
+    print("\n" + "="*60)
+    print("Success! Charts generated.")
+    print("="*60)
+    abs_output_path = os.path.abspath('output')
+    abs_input_path = os.path.abspath(file_path)
+    print(f"\nOutput location:\t{abs_output_path}/")
+    print(f"Input file:\t\t{abs_input_path}")
+    print(f"Client highlighted:\t{args.client}")
+    print(f"Output formats:\t\t{', '.join(args.output)}")
+    print("="*60 + "\n")
 
 
 if __name__ == "__main__":
