@@ -101,7 +101,7 @@ def merge_config_with_args(config: Dict[str, Any], args: argparse.Namespace) -> 
     # Map config keys to argument names
     config_mapping = {
         'input': 'i',
-        'output': 'output',
+        'output': 'formats',
         'client': 'client',
         'validate': 'validate',
         'verbose': 'verbose',
@@ -136,7 +136,7 @@ def create_parser() -> argparse.ArgumentParser:
         epilog='''
 Examples:
   %(prog)s -i data.csv
-  %(prog)s -i data.csv --output html pdf png
+  %(prog)s -i data.csv html pdf png
   %(prog)s -i data.csv --client "Acme Corp" --validate
   %(prog)s --config config.yaml --verbose
 
@@ -161,11 +161,11 @@ For more information, visit: https://github.com/nstapc/compgrapher
     )
     
     parser.add_argument(
-        '--output', '-o',
-        nargs='+',
+        'formats',
+        nargs='*',
         default=['png'],
-        choices=['html', 'pdf', 'png', 'svg', 'jpg', 'jpeg', 'webp', 'eps'],
-        help='Output formats (default: png)',
+        choices=['html', 'pdf', 'png', 'svg', 'jpg', 'jpeg', 'webp', 'eps', []],
+        help='Output format(s): html, pdf, png, svg, jpg, jpeg, webp, eps (default: png)',
         metavar='FORMAT'
     )
     
@@ -304,40 +304,65 @@ def run_cli(args: Optional[List[str]] = None) -> int:
     try:
         # Validate arguments
         validate_args(parsed_args)
-        
+
         logger.info(f"Compgrapher v{__version__}")
         logger.info(f"Input file: {parsed_args.i}")
-        logger.info(f"Output formats: {parsed_args.output}")
-        
-        # Import here to avoid circular imports and allow CLI to work independently
-        from main import main as run_main
-        
-        # Inject arguments into sys.argv for main.py compatibility
-        sys.argv = ['compgrapher']
-        if parsed_args.client:
-            sys.argv.extend(['--client', parsed_args.client])
-        sys.argv.extend(['-i', parsed_args.i])
-        sys.argv.extend(['--output'] + parsed_args.output)
+        output_formats = parsed_args.formats if parsed_args.formats else ['png']
+        logger.info(f"Output formats: {output_formats}")
+
+        # ------------------------------------------------------------------ #
+        # Data validation (--validate / --validate-only)                      #
+        # ------------------------------------------------------------------ #
         if parsed_args.validate or parsed_args.validate_only:
-            sys.argv.append('--validate')
-        
-        # Run the main processing
-        run_main()
-        
-        # Generate summary if requested
-        if parsed_args.summary:
-            logger.info("Generating summary report...")
-            # Summary generation would be handled by the graph generator
-        
+            from data_parser import CompensationDataParser, DataValidationError
+            logger.info("Running data validation...")
+            try:
+                dp = CompensationDataParser(parsed_args.i)
+                data, warnings = dp.process(validate=True)
+                if warnings:
+                    logger.warning(f"Validation found {len(warnings)} issue(s):")
+                    for w in warnings:
+                        logger.warning(f"  • {w}")
+                else:
+                    logger.info("Validation passed — no issues found.")
+            except DataValidationError as exc:
+                logger.error(f"Validation error: {exc}")
+                return 1
+
+            if parsed_args.validate_only:
+                logger.info("--validate-only: skipping chart generation.")
+                return 0
+
+        # ------------------------------------------------------------------ #
+        # Chart generation                                                     #
+        # ------------------------------------------------------------------ #
+        from main import process
+
+        show_grid = getattr(parsed_args, 'show_grid', True)
+        show_labels = getattr(parsed_args, 'show_labels', False)
+        generate_summary = getattr(parsed_args, 'summary', False)
+
+        process(
+            file_path=parsed_args.i,
+            output_formats=output_formats,
+            client_name=getattr(parsed_args, 'client', None),
+            show_labels=show_labels,
+            show_grid=show_grid,
+            generate_summary=generate_summary,
+        )
+
         logger.info("Processing complete!")
         return 0
-        
+
     except ValueError as e:
         logger.error(f"Validation error: {e}")
         return 1
     except FileNotFoundError as e:
         logger.error(f"File not found: {e}")
         return 1
+    except SystemExit as e:
+        # process() calls sys.exit() on unrecoverable errors; propagate the code.
+        return int(e.code) if e.code is not None else 1
     except Exception as e:
         logger.exception(f"Unexpected error: {e}")
         return 1

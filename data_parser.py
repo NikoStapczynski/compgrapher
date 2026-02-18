@@ -18,7 +18,18 @@ class CompensationDataParser:
     """Parses and validates compensation data from various file formats"""
     
     SUPPORTED_FORMATS = {'.csv', '.xls', '.xlsx', '.ods'}
-    BAD_COLUMNS = ['Comp Data Points', 'Comp Average', 'Average', 'Total']
+    # Columns that are report summaries, not employer data.
+    # Keep this in sync with remove_summary_columns() in main.py.
+    BAD_COLUMNS = [
+        'Comp Data Points',
+        'Comp Average',
+        'Comp Lo-Hi Range',
+        'Comp Median',
+        '75th Percent of Market',
+        '% Melrose Higher Lower than 75th Percentile',
+        'Average',
+        'Total',
+    ]
     
     def __init__(self, filepath: str):
         """
@@ -89,19 +100,21 @@ class CompensationDataParser:
             logger.info(f"Removing columns: {columns_to_drop}")
             df = df.drop(columns=columns_to_drop)
         
-        # Find position title column - handle both 'POSITION TITLE' and 'DARTMOUTH POSITION TITLES'
-        position_columns = ['POSITION TITLE', 'DARTMOUTH POSITION TITLES']
+        # Find position title column.  Accept any column whose name contains
+        # 'POSITION TITLE' or 'DARTMOUTH POSITION' (case-insensitive) so the
+        # parser is resilient to minor header variations.
         found_column = None
-        for col in position_columns:
-            if col in df.columns:
+        for col in df.columns:
+            upper = col.upper()
+            if 'POSITION TITLE' in upper or 'DARTMOUTH POSITION' in upper:
                 found_column = col
                 logger.info(f"Using '{found_column}' as position title column")
                 break
-        
+
         if not found_column:
             raise DataValidationError(
                 "Could not find position title column. "
-                f"Expected one of: {', '.join(position_columns)}"
+                "Expected a column containing 'POSITION TITLE' or 'DARTMOUTH POSITION'."
             )
         
         # Rename to standard 'POSITION TITLE' for consistency
@@ -165,13 +178,18 @@ class CompensationDataParser:
         logger.info(f"Parsed data for {len(compensation_data)} positions")
         return compensation_data
     
-    def validate_data(self, compensation_data: Dict[str, Dict[str, Tuple[float, float]]]) -> List[str]:
+    @staticmethod
+    def validate_data(compensation_data: Dict[str, Dict[str, Tuple[float, float]]]) -> List[str]:
         """
         Validate compensation data for logical consistency.
-        
+
+        This is a ``@staticmethod`` so it can be called without a parser
+        instance (e.g. in tests or one-off scripts):
+        ``CompensationDataParser.validate_data(data)``.
+
         Args:
             compensation_data: Parsed compensation data
-            
+
         Returns:
             List of validation warnings
         """
@@ -211,7 +229,7 @@ class CompensationDataParser:
                 logger.warning(warning)
         else:
             logger.info("Data validation passed")
-        
+
         return warnings
     
     def process(self, validate: bool = True) -> Tuple[Dict[str, Dict[str, Tuple[float, float]]], List[str]]:

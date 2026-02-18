@@ -219,49 +219,46 @@ class TestDataValidation:
     
     def test_validate_valid_data(self, sample_compensation_data):
         """Test validation passes for valid data."""
-        parser = CompensationDataParser.__new__(CompensationDataParser)
-        warnings = parser.validate_data(sample_compensation_data)
-        
+        # validate_data is a @staticmethod — no instance needed.
+        warnings = CompensationDataParser.validate_data(sample_compensation_data)
+
         # Valid data should have no warnings
         assert len(warnings) == 0
-    
+
     def test_validate_low_exceeds_high(self):
         """Test validation catches when low > high."""
-        parser = CompensationDataParser.__new__(CompensationDataParser)
         invalid_data = {
             'Position A': {
                 'Employer A': (100.0, 80.0),  # Invalid: low > high
             }
         }
-        
-        warnings = parser.validate_data(invalid_data)
-        
+
+        warnings = CompensationDataParser.validate_data(invalid_data)
+
         assert len(warnings) > 0
         assert any("Low value" in w and "exceeds high value" in w for w in warnings)
-    
+
     def test_validate_negative_values(self):
         """Test validation catches negative salary values."""
-        parser = CompensationDataParser.__new__(CompensationDataParser)
         invalid_data = {
             'Position A': {
                 'Employer A': (-10.0, 80.0),  # Invalid: negative value
             }
         }
-        
-        warnings = parser.validate_data(invalid_data)
-        
+
+        warnings = CompensationDataParser.validate_data(invalid_data)
+
         assert len(warnings) > 0
         assert any("Negative compensation" in w for w in warnings)
-    
+
     def test_validate_empty_position(self):
         """Test validation catches positions with no data."""
-        parser = CompensationDataParser.__new__(CompensationDataParser)
         invalid_data = {
             'Position A': {},  # Empty
         }
-        
-        warnings = parser.validate_data(invalid_data)
-        
+
+        warnings = CompensationDataParser.validate_data(invalid_data)
+
         assert len(warnings) > 0
         assert any("no compensation data" in w for w in warnings)
 
@@ -452,12 +449,4 @@ class TestGraphGenerator:
             pytest.skip("Graph generator module not available")
 
 
-# ============================================================================
-# Conftest-style fixtures for pytest
-# ============================================================================
-
-def pytest_configure(config):
-    """Configure pytest markers."""
-    config.addinivalue_line(
-        "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
-    )
+# pytest markers are registered in tests/conftest.py.

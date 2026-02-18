@@ -22,7 +22,7 @@ Generates floating bar graphs from compensation market data to facilitate employ
 git clone https://github.com/nstapc/compgrapher.git
 cd compgrapher
 
-# Set up virtual environment (recommended)
+# Set up virtual environment
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
@@ -33,14 +33,14 @@ pip install -r requirements.txt
 ### Basic Usage
 
 ```bash
-# Generate PNG graphs from sample data
-python main.py -i input/csv/example_table.csv --output png
+# Generate PNG graphs from sample data (default)
+python main.py -i input/csv/example_table.csv
 
 # Generate HTML report with charts
-python main.py -i your_data.csv --output html png
+python main.py -i your_data.csv html png
 
 # Specify the client to highlight
-python main.py -c "Your Company" -i data.csv --output html pdf png
+python main.py -c "Your Company" -i data.csv html pdf png
 ```
 
 ## Documentation
@@ -64,12 +64,15 @@ Example structure:
 ### Command Line Options
 
 ```
-python main.py [OPTIONS]
+python main.py [OPTIONS] [FORMAT ...]
+
+Arguments:
+  FORMAT ...          Output format(s): html, pdf, png, svg, jpg, jpeg, webp, eps
+                      (default: png)
 
 Options:
   --client NAME       Name of the employer to highlight (default: first in data)
   -i FILE             Path to data file (.csv, .xls, .xlsx, .ods)
-  --output FORMAT(s)  Output format(s): html, pdf, png, svg, jpg, jpeg, webp, eps
   --validate          Run data validation checks
   --config FILE       Path to YAML configuration file
   -v, --verbose       Enable verbose output

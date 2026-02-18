@@ -23,14 +23,14 @@ class GraphConfig:
     """Configuration for graph appearance and behavior"""
     
     # Colors
-    client_color: str = '#AAA'
+    client_color: str = '#4FC3F7'
     default_color: str = '#FFF'
     edge_color: str = 'black'
     grid_color: str = '#AAA'
     
     # Figure settings
     figure_width: float = 10.0
-    figure_height: float = 6.0
+    figure_height: float = 8.0
     dpi: int = 100
     
     # Labels
@@ -195,11 +195,18 @@ class GraphGenerator:
             # Calculate bar heights
             heights = group[self.SAL_MAX] - group[self.SAL_MIN]
             linewidths = [3 if h == 0 else 1 for h in heights]
-            
+
+            # Calculate proportional thickness for zero-height bars (2% of y-axis range)
+            all_salaries = pd.concat([group[self.SAL_MIN], group[self.SAL_MAX]])
+            y_range = all_salaries.max() - all_salaries.min()
+            ZERO_BAR_THICKNESS_RATIO = 0.02  # 2% of y-axis range
+            zero_bar_height = y_range * ZERO_BAR_THICKNESS_RATIO if y_range > 0 else 1.0
+            adjusted_heights = [zero_bar_height if h == 0 else h for h in heights]
+
             # Draw bars
             bars = ax.bar(
                 group[self.LOCATION],
-                heights,
+                adjusted_heights,
                 bottom=group[self.SAL_MIN],
                 color=group[self.COLOR],
                 edgecolor=self.config.edge_color,
@@ -262,10 +269,17 @@ class GraphGenerator:
         
         heights = group[self.SAL_MAX] - group[self.SAL_MIN]
         linewidths = [3 if h == 0 else 1 for h in heights]
-        
+
+        # Calculate proportional thickness for zero-height bars (2% of y-axis range)
+        all_salaries = pd.concat([group[self.SAL_MIN], group[self.SAL_MAX]])
+        y_range = all_salaries.max() - all_salaries.min()
+        ZERO_BAR_THICKNESS_RATIO = 0.02  # 2% of y-axis range
+        zero_bar_height = y_range * ZERO_BAR_THICKNESS_RATIO if y_range > 0 else 1.0
+        adjusted_heights = [zero_bar_height if h == 0 else h for h in heights]
+
         bars = ax.bar(
             group[self.LOCATION],
-            heights,
+            adjusted_heights,
             bottom=group[self.SAL_MIN],
             color=group[self.COLOR],
             edgecolor=self.config.edge_color,
