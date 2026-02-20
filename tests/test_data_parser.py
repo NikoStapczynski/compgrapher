@@ -433,7 +433,7 @@ class TestGraphGenerator:
             from graph_generator import GraphConfig
             config = GraphConfig()
             assert config.show_grid is True
-            assert config.dpi == 100
+            assert config.dpi == 300
             assert config.output_dir == 'output'
         except ImportError:
             pytest.skip("Graph generator module not available")

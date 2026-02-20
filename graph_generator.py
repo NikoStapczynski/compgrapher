@@ -31,7 +31,7 @@ class GraphConfig:
     # Figure settings
     figure_width: float = 10.0
     figure_height: float = 8.0
-    dpi: int = 100
+    dpi: int = 300
     
     # Labels
     xlabel: str = 'Location'

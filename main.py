@@ -642,6 +642,7 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
 
     # Generate HTML
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    input_stem = os.path.splitext(os.path.basename(input_file))[0]
     html_content = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -721,6 +722,27 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
             white-space: nowrap;
         }}
         .legend-list a:hover {{
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }}
+        .legend-toggle {{
+            float: right;
+            background: none;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            width: 22px;
+            height: 22px;
+            line-height: 18px;
+            text-align: center;
+            font-size: 1.1em;
+            color: #555;
+            cursor: pointer;
+            padding: 0;
+            margin-top: 1px;
+            transition: background 0.15s, color 0.15s;
+        }}
+        .legend-toggle:hover {{
             background: #3498db;
             color: white;
             border-color: #2980b9;
@@ -949,18 +971,20 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
 </head>
 <body>
     <div class="header">
-        <h1>Compensation Analysis Report</h1>
-        <h2>Client: {client_name}</h2>
+        <h1>{input_stem}</h1>
+        <h2>Town of {client_name}, MA</h2>
+        <h3>FY26</h3>
     </div>
 
     <!-- Legend / Table of Contents -->
     <div class="legend" id="legend">
-        <h2>&#128269; Positions ({len(position_summaries)} total)</h2>
+        <h2>&#128269; Search<button class="legend-toggle" id="legendToggle" title="Show/hide">&#8722;</button></h2>
+        <div id="legendBody">
         <input
             class="search-bar"
             id="positionSearch"
             type="search"
-            placeholder="Search positions&hellip;"
+            placeholder="Search"
             autocomplete="off"
         />
         <ul class="legend-list" id="legendList">
@@ -971,6 +995,7 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
 
     html_content += '''        </ul>
         <p class="no-results" id="noResults" style="display:none;">No positions match your search.</p>
+        </div>
     </div>
 
 '''
@@ -979,7 +1004,7 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
         html_content += f'''
     <div class="position-card" id="pos-{position['safe_name']}" data-position-name="{position['name'].lower()}">
         <div class="position-title">{position['name']}</div>
-
+        
         <div class="chart-container">
             <canvas id="chart-{position['safe_name']}"></canvas>
         </div>
@@ -1057,7 +1082,7 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
         const yMin = Math.min(...allSalaries);
         const yMax = Math.max(...allSalaries);
         const yRange = yMax - yMin;
-        const ZERO_BAR_THICKNESS_RATIO = 0.02; // 2% of y-axis range for consistent thickness
+        const ZERO_BAR_THICKNESS_RATIO = 0.01; // 1% of y-axis range for consistent thickness
         return yRange * ZERO_BAR_THICKNESS_RATIO || 1.0;
     }}
 
@@ -1096,15 +1121,16 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
                 datasets: [{{
                     label: 'Pay Range',
                     data: rows.map(r => r.min === r.max
-                            ? [r.min, r.max + calculateZeroBarThickness(rows)]
+                            ? [r.min - calculateZeroBarThickness(rows)/2, r.max + calculateZeroBarThickness(rows)/2]
                             : [r.min, r.max]),
                     backgroundColor: rows.map(r => r.color),
                     borderColor: rows.map(r => r.borderColor),
-                    borderWidth: rows.map(r => r.max - r.min === 0 ? 3 : 1),
+                    borderWidth: 1,
                     borderSkipped: false,
                 }}]
             }},
             options: {{
+                devicePixelRatio: 4,
                 responsive: true,
                 maintainAspectRatio: false,
                 onHover: function(event, elements) {{
@@ -1314,6 +1340,19 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
     // Initial attachment after charts are ready
     attachRowHoverHandlers();
 
+    // ── Legend show/hide toggle ──────────────────────────────────────────────
+    (function () {{
+        const btn  = document.getElementById('legendToggle');
+        const body = document.getElementById('legendBody');
+        let open = true;
+        btn.addEventListener('click', function () {{
+            open = !open;
+            body.style.display = open ? '' : 'none';
+            btn.innerHTML = open ? '&#8722;' : '+';
+            btn.title = open ? 'Hide' : 'Show';
+        }});
+    }})();
+
     // ── Position search (legend + cards) ────────────────────────────────
     (function () {{
         const searchInput  = document.getElementById('positionSearch');
@@ -1364,7 +1403,6 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
 
     # Save HTML file
     os.makedirs('output/html', exist_ok=True)
-    input_stem = os.path.splitext(os.path.basename(input_file))[0]
     html_filename = f"{input_stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
     html_path = os.path.join('output/html', html_filename)
 
