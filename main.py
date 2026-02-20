@@ -583,6 +583,16 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
 
     for position_name, group in df.groupby(title):
         safe_name = position_name.replace('/', '_')
+        # Escape single quotes for JavaScript string literals
+        safe_name_js = safe_name.replace("'", "\\'")
+        
+        # Store both versions in the position data
+        position_data = {
+            'name': position_name,
+            'safe_name': safe_name,
+        }
+        
+        # Continue with the rest of the data gathering
 
         # Sort by salary range
         sorted_group = group.sort_values(by=sal_max, ascending=True)
@@ -630,6 +640,7 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
         position_summaries.append({
             'name': position_name,
             'safe_name': safe_name,
+            'safe_name_js': safe_name_js,
             'employers': employers_data,
             'chart_data': chart_data,
         })
@@ -1012,9 +1023,9 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
         <table class="salary-table" id="table-{position['safe_name']}">
             <thead>
                 <tr>
-                    <th class="sortable" data-col="employer" data-pos="{position['safe_name']}" onclick="sortTable('{position['safe_name']}', 'employer')">Employer <span class="sort-icon">&#8645;</span></th>
-                    <th class="sortable" data-col="min"      data-pos="{position['safe_name']}" onclick="sortTable('{position['safe_name']}', 'min')">Minimum <span class="sort-icon">&#8645;</span></th>
-                    <th class="sortable" data-col="max"      data-pos="{position['safe_name']}" onclick="sortTable('{position['safe_name']}', 'max')">Maximum <span class="sort-icon">&#8645;</span></th>
+                    <th class="sortable" data-col="employer" data-pos="{position['safe_name']}" onclick="sortTable('{position['safe_name_js']}', 'employer')">Employer <span class="sort-icon">&#8645;</span></th>
+                    <th class="sortable" data-col="min"      data-pos="{position['safe_name']}" onclick="sortTable('{position['safe_name_js']}', 'min')">Minimum <span class="sort-icon">&#8645;</span></th>
+                    <th class="sortable sort-asc" data-col="max"      data-pos="{position['safe_name']}" onclick="sortTable('{position['safe_name_js']}', 'max')">Maximum <span class="sort-icon">&#2191;</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -1130,9 +1141,9 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
                 }}]
             }},
             options: {{
-                devicePixelRatio: 4,
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: false,
                 onHover: function(event, elements) {{
                     if (!safeName) return;
                     highlightTableRow(safeName, elements.length > 0 ? elements[0].index : -1);
@@ -1210,7 +1221,21 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
     }}
 
     // ── Sort state per position ──────────────────────────────────────────
+    // Initialize with 'max' column sorted by 'asc' (low to high) by default
     const sortState = {{}};   // {{ safeName: {{ col: 'employer'|'min'|'max', dir: 'asc'|'desc' }} }}
+
+    // Initialize each position's sort state to default to max column
+    // Set to 'desc' so the first call to sortTable toggles to 'asc' (low to high)
+    document.querySelectorAll('.salary-table').forEach(function(table) {{
+        const safeName = table.id.replace(/^table-/, '');
+        sortState[safeName] = {{ col: 'max', dir: 'desc' }};
+    }});
+
+    // Apply initial sort to all tables on page load (sort by max, ascending)
+    document.querySelectorAll('.salary-table').forEach(function(table) {{
+        const safeName = table.id.replace(/^table-/, '');
+        sortTable(safeName, 'max');
+    }});
 
     function sortTable(safeName, col) {{
         const table = document.getElementById('table-' + safeName);
@@ -1279,9 +1304,25 @@ def generate_html_report(df, client_name, input_file, per_inspection=None,
         reorderChart(safeName, orderedEmployers);
     }}
 
-    // ── Initialise all charts on load ────────────────────────────────────
-    Object.keys(ALL_CHART_DATA).forEach(function(safeName) {{
-        initChart(safeName);
+    // ── Lazy loading: Initialize charts only when they come into view ─────
+    const chartObserver = new IntersectionObserver(function(entries) {{
+        entries.forEach(function(entry) {{
+            if (entry.isIntersecting) {{
+                const safeName = entry.target.id.replace(/^chart-/, '');
+                if (!chartInstances[safeName]) {{
+                    initChart(safeName);
+                }}
+            }}
+        }});
+    }}, {{
+        root: null,
+        rootMargin: '200px',
+        threshold: 0
+    }});
+
+    // Observe all chart containers
+    document.querySelectorAll('.chart-container canvas').forEach(function(canvas) {{
+        chartObserver.observe(canvas);
     }});
 
     // ── Row hover → highlight matching chart bar ─────────────────────────
